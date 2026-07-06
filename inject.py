@@ -124,32 +124,46 @@ function renderSearchResults() {
     return true;
   });
 
-  var container = document.getElementById('searchResults');
-  if(!container) return;
-
   // Update count
-  var countEl = document.querySelector('#page-search [class*="藏品"]');
+  var countEl = document.querySelector('#page-search .results-count, #page-search [class*="count"], #resultsCount');
   if(countEl) countEl.textContent = '共 ' + list.length + ' 件藏品';
 
+  // Update results list
+  var container = document.getElementById('resultsList');
+  if(!container) return;
+
   container.innerHTML = list.length ? list.map(function(s) {
-    return '<div class="sr-item" onclick="openDetail(\''+s.id+'\')">'
-      + '<div class="sn">' + s.nm + '</div>'
-      + '<div class="sm">' + s.rg + ' · ' + s.yr + ' · ' + s.tp + '</div>'
-      + '<div class="sp">' + s.tb + '</div></div>';
-  }).join('') : '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:#94A3B8">没有匹配的藏品</div>';
+    return '<div class="result-card" onclick="openDetail(\''+s.id+'\')" style="display:flex;gap:12px;background:#FFF;border-radius:10px;padding:12px;box-shadow:0 1px 4px rgba(27,50,79,0.08);border:1px solid #E5E0D8;cursor:pointer;margin-bottom:8px">'
+      + '<div style="width:60px;height:60px;background:#F5F1EB;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;color:#C8963E">&#x90AE;</div>'
+      + '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + s.nm + '</div>'
+      + '<div style="font-size:12px;color:#94A3B8;margin:2px 0">' + s.rg + ' · ' + s.yr + ' · ' + s.tp + '</div>'
+      + '<div style="font-size:13px;color:#E93D82;font-weight:600">' + s.tb + '</div></div></div>';
+  }).join('') : '<div style="text-align:center;padding:40px 0;color:#94A3B8;font-size:14px;grid-column:1/-1">没有匹配的藏品</div>';
 }
 
-function setRegionFilter(el, val) {
-  document.querySelectorAll('#page-search .ft-row:first-child .ft-chip').forEach(function(c){c.classList.remove('act')});
-  if(el) el.classList.add('act');
-  _regionFilter = val;
+// Original design calls: selectRegion('all',this), selectType('stamp',this), toggleSort()
+function selectRegion(val, el) {
+  document.querySelectorAll('.region-chip').forEach(function(c){c.classList.remove('active')});
+  if(el) el.classList.add('active');
+  var map = {all:'全部', mainland:'大陆', hongkong:'香港', macau:'澳门', taiwan:'台湾', overseas:'海外'};
+  _regionFilter = map[val] || '全部';
   renderSearchResults();
 }
 
-function setTypeFilter(el, val) {
-  document.querySelectorAll('#page-search .ft-row:nth-child(3) .ft-chip').forEach(function(c){c.classList.remove('act')});
-  if(el) el.classList.add('act');
-  _typeFilter = val;
+function selectType(val, el) {
+  document.querySelectorAll('.type-chip').forEach(function(c){c.classList.remove('active')});
+  if(el) el.classList.add('active');
+  var map = {all:'全部', stamp:'邮票', sheet:'小型张', cover:'实寄封', postcard:'明信片'};
+  _typeFilter = map[val] || '全部';
+  renderSearchResults();
+}
+
+function toggleSort() {
+  var btn = document.querySelector('.sort-btn');
+  if(!btn) return;
+  var opts = ['默认排序','价格升序','价格降序','年份排序'];
+  var idx = opts.indexOf(btn.textContent.trim());
+  btn.textContent = opts[(idx+1) % opts.length];
   renderSearchResults();
 }
 
@@ -188,22 +202,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var favEl = document.getElementById('detailFav');
   if(favEl) favEl.addEventListener('click', toggleFav);
 
-  // Wire up region filter chips
-  var regionChips = document.querySelectorAll('#page-search .ft-row:first-child .ft-chip');
-  regionChips.forEach(function(chip) {
-    chip.addEventListener('click', function() {
-      setRegionFilter(this, this.textContent.trim());
-    });
-  });
-
-  // Wire up type filter chips
-  var typeChips = document.querySelectorAll('#page-search .ft-row:nth-child(3) .ft-chip');
-  typeChips.forEach(function(chip) {
-    chip.addEventListener('click', function() {
-      setTypeFilter(this, this.textContent.trim());
-    });
-  });
-
   // Wire up search input
   var searchInput = document.getElementById('searchInput');
   if(searchInput) {
@@ -211,29 +209,13 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('keyup', function(e) { if(e.key==='Enter') doSearch(); });
   }
 
-  // Wire up "查看全部" links on home page
-  document.querySelectorAll('[onclick*="switchPage"], [onclick*="switchPage"]').forEach(function(el) {
-    // already handled by inline onclick
-  });
-
-  // Make home page stamp cards clickable
-  var stampCards = document.querySelectorAll('#page-home [class*="stamp-card"], #page-home [class*="item"]');
-  stampCards.forEach(function(card, idx) {
+  // Make home page stamp items clickable
+  document.querySelectorAll('#page-home [class*="stamp-card"], #page-home [class*="result-card"], #page-home [class*="item"]').forEach(function(card, idx) {
     if(idx < STAMPS.length) {
+      card.style.cursor = 'pointer';
       card.addEventListener('click', function(){ openDetail(STAMPS[idx].id); });
     }
   });
-
-  // Add search results container if missing
-  var sr = document.getElementById('searchResults');
-  if(!sr) {
-    var searchPage = document.getElementById('page-search');
-    if(searchPage) {
-      var container = document.createElement('div');
-      container.id = 'searchResults';
-      searchPage.appendChild(container);
-    }
-  }
 
   // Initial render
   renderSearchResults();
