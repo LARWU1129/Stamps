@@ -501,6 +501,18 @@ function openDetail(id){
 function toggleFav(){var id=window._di;if(!id)return;var i=FAVS.indexOf(id);if(i>=0)FAVS.splice(i,1);else FAVS.push(id);var f=document.getElementById("detailFav");if(f)f.textContent=FAVS.indexOf(id)>=0?"\u2764":"\u2661";}
 
 var _rf="全部",_tf="全部",_sq="";
+function selectRegion(v,e){
+  document.querySelectorAll(".region-chip").forEach(function(c){c.classList.remove("active")});if(e)e.classList.add("active");
+  var map={all:"全部",mainland:"大陆",hongkong:"香港",macau:"澳门",taiwan:"台湾",overseas:"海外"};_rf=map[v]||"全部";renderResults();
+}
+function selectType(v,e){
+  document.querySelectorAll(".type-chip").forEach(function(c){c.classList.remove("active")});if(e)e.classList.add("active");
+  var map={all:"全部",stamp:"邮票",sheet:"小型张",cover:"实寄封",postcard:"明信片"};_tf=map[v]||"全部";renderResults();
+}
+function toggleSort(){
+  var b=document.querySelector(".sort-btn");if(!b)return;
+  var o=["默认排序","价格升序","价格降序","年份排序"];var i=o.indexOf(b.textContent.trim());b.textContent=o[(i+1)%o.length];renderResults();
+}
 function renderResults(){
   var list=STAMPS.filter(function(s){if(_rf!=="全部"&&s.rg!==_rf)return false;if(_tf!=="全部"&&s.tp!==_tf)return false;if(_sq&&s.nm.indexOf(_sq)<0)return false;return true;});
   var ce=document.getElementById("resultsCount");if(ce)ce.textContent="共 "+list.length+" 件藏品";
@@ -539,4 +551,4 @@ document.addEventListener("DOMContentLoaded",function(){
   renderResults();
 });
 </script>
-</body></html> 
+</body></html>
